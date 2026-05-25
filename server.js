@@ -323,3 +323,5 @@ app.listen(PORT, () => {
   console.log(`⚙️   Active LLM RAG Provider: ${process.env.LLM_PROVIDER || 'gemini'}`);
   console.log(`=============================================================================\n`);
 });
+
+export default app;
