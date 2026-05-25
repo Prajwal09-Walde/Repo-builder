@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Client-Side Diagnostics & Error Catcher (intercepts and displays any JS loading or runtime issues on-screen) -->
+  <script>
+    window.addEventListener('error', function(e) {
+      console.error("METROPOLIS ERROR:", e.error);
+      const div = document.createElement('div');
+      div.style.position = 'fixed';
+      div.style.top = '10px';
+      div.style.left = '10px';
+      div.style.right = '10px';
+      div.style.zIndex = '999999';
+      div.style.backgroundColor = 'rgba(255, 30, 70, 0.96)';
+      div.style.color = 'white';
+      div.style.padding = '20px';
+      div.style.borderRadius = '8px';
+      div.style.fontFamily = 'monospace';
+      div.style.fontSize = '12px';
+      div.style.boxShadow = '0 0 20px rgba(255,0,0,0.5)';
+      div.style.maxHeight = '90vh';
+      div.style.overflowY = 'auto';
+      div.innerHTML = `
+        <h3 style="margin-top:0;font-size:16px;">⚠️ METROPOLIS WEBGL DIAGNOSTICS: JS RUNTIME ERROR</h3>
+        <p><strong>Message:</strong> ${e.message}</p>
+        <p><strong>Source:</strong> ${e.filename}:${e.lineno}:${e.colno}</p>
+        <p><strong>Stack Trace:</strong></p>
+        <pre style="background:rgba(0,0,0,0.25);padding:10px;border-radius:4px;overflow-x:auto;white-space:pre-wrap;">${e.error ? e.error.stack : 'Stack trace unavailable'}</pre>
+        <p style="margin-bottom:0;font-size:10px;opacity:0.8;">Please refresh the browser or share this details box to diagnose the blank render block immediately.</p>
+      `;
+      document.body.appendChild(div);
+    });
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metropolis 3D — GitHub Repository Visualizer & AI RAG Analyst</title>
+  <meta name="description" content="A premium 3D codebase skyscraper city visualizing GitHub repositories with interactive RAG context AI chat audits.">
+  <link rel="stylesheet" href="./index.css">
+  <!-- W3C Import Map for local ES Modules (resolves CDN relative path loading errors) -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "/node_modules/three/build/three.module.js",
+        "three/addons/": "/node_modules/three/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <!-- Premium Glassmorphic User Gate Modal -->
+  <div id="auth-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vw; height: 100vh; background: rgba(2, 2, 8, 0.45); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); z-index: 99999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease; opacity: 1;">
+    <div class="glass-panel interactive" style="width: 90%; max-width: 400px; padding: 32px; border-color: var(--border-purple); box-shadow: var(--shadow-purple); background: rgba(11, 13, 28, 0.85); display: flex; flex-direction: column; gap: 20px; border-radius: 16px;">
+      
+      <!-- Logo Header -->
+      <div style="text-align: center; display: flex; flex-direction: column; gap: 6px;">
+        <h2 style="font-family: var(--font-display); font-size: 20px; font-weight: 700; letter-spacing: 1.5px; color: var(--color-cyan); margin: 0; text-shadow: 0 0 10px rgba(0, 240, 255, 0.25);">METROPOLIS</h2>
+        <span style="font-size: 10px; color: var(--color-text-muted); font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.5px;">Authenticate to zoom and audit RAG cityscapes</span>
+      </div>
+
+      <!-- Auth Action Tabs -->
+      <div style="display: flex; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 2px;">
+        <button id="auth-tab-login" class="interactive active" style="flex: 1; background: transparent; border: none; outline: none; padding: 10px 0; color: var(--color-cyan); border-bottom: 2px solid var(--color-cyan); cursor: pointer; font-family: var(--font-display); font-size: 12px; font-weight: 700; transition: all 0.3s;">LOG IN</button>
+        <button id="auth-tab-signup" class="interactive" style="flex: 1; background: transparent; border: none; outline: none; padding: 10px 0; color: var(--color-text-muted); border-bottom: 2px solid transparent; cursor: pointer; font-family: var(--font-display); font-size: 12px; font-weight: 700; transition: all 0.3s;">SIGN UP</button>
+      </div>
+
+      <!-- Form Segment -->
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <label style="font-size: 10px; font-family: var(--font-display); font-weight: 500; text-transform: uppercase; color: var(--color-text-muted);">Username</label>
+          <input type="text" id="auth-username" placeholder="Enter username..." style="background: rgba(4, 5, 12, 0.65); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: white; outline: none; transition: border-color 0.2s;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <label style="font-size: 10px; font-family: var(--font-display); font-weight: 500; text-transform: uppercase; color: var(--color-text-muted);">Password</label>
+          <input type="password" id="auth-password" placeholder="Enter password (min 6 chars)..." style="background: rgba(4, 5, 12, 0.65); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: white; outline: none; transition: border-color 0.2s;">
+        </div>
+
+        <!-- System Message Box -->
+        <div id="auth-message-box" style="font-size: 11px; font-family: var(--font-body); color: var(--color-red); margin-top: 4px; min-height: 16px; display: none;"></div>
+      </div>
+
+      <!-- Submit Action Button -->
+      <button id="btn-auth-submit" style="background: linear-gradient(135deg, var(--color-cyan), var(--color-purple)); border: none; outline: none; color: white; padding: 12px; border-radius: 8px; font-family: var(--font-display); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 10px rgba(0, 240, 255, 0.15); width: 100%; margin-top: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">CONFIRM SESSION ⚡</button>
+
+      <!-- Divider -->
+      <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 4px 0;">
+        <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.06);"></span>
+        <span style="font-size: 9px; font-family: var(--font-display); color: var(--color-text-muted); text-transform: uppercase;">or</span>
+        <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.06);"></span>
+      </div>
+
+      <!-- GitHub Login Button -->
+      <button id="btn-auth-github" style="background: rgba(36, 41, 47, 0.8); border: 1px solid rgba(255,255,255,0.08); outline: none; color: white; padding: 12px; border-radius: 8px; font-family: var(--font-display); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 10px rgba(255,255,255,0.02); width: 100%;">
+        <span style="font-size: 15px;">🐙</span> SIGN IN WITH GITHUB
+      </button>
+    </div>
+  </div>
+
+  <!-- 3D Three.js Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Top Search & Configuration HUD -->
+  <div id="top-console" class="ui-overlay glass-panel">
+    <div style="display: flex; flex-direction: column; gap: 2px;">
+      <h1 style="font-family: var(--font-display); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--color-cyan); display: flex; align-items: center; gap: 6px;">
+        <span>METROPOLIS 3D</span>
+      </h1>
+      <span style="font-size: 9px; color: var(--color-text-muted); font-family: var(--font-display);">RAG AUDIT ENGINE</span>
+    </div>
+    
+    <div class="search-wrapper interactive">
+      <select id="data-source-select">
+        <option value="preset">Preset Famous Repos</option>
+        <option value="github">Live GitHub Username</option>
+        <option value="compare">Rival Skylines VS</option>
+      </select>
+      <input type="text" id="username-input" placeholder="Enter GitHub username (e.g. mrdoob)..." disabled>
+      <button id="btn-load-data" class="search-btn" aria-label="Search" style="width: 36px; height: 36px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; min-width: 36px; flex-shrink: 0; margin-right: 4px;">
+        <span id="btn-search-icon" style="font-size: 13px; margin: 0; display: inline-flex; align-items: center; justify-content: center; line-height: 1;">⚡</span>
+      </button>
+    </div>
+
+    <!-- Glowing Logout Button -->
+    <button id="btn-logout" class="interactive" style="background: rgba(255, 30, 70, 0.05); border: 1px solid rgba(255, 30, 70, 0.2); color: var(--color-red); padding: 8px 14px; font-family: var(--font-display); font-size: 10px; font-weight: 700; cursor: pointer; border-radius: 20px; transition: all 0.2s; display: flex; align-items: center; gap: 4px;">
+      <span>🔑</span> LOG OUT
+    </button>
+
+    <!-- Loading Bar Indicator -->
+    <div class="loader-bar">
+      <div class="loader-bar-fill"></div>
+    </div>
+  </div>
+
+  <!-- Floating HUD Tooltip (Hover) -->
+  <div id="hud-tooltip" class="ui-overlay glass-panel">
+    <div class="hud-repo" id="hud-repo-name">three.js</div>
+    <div class="hud-lang">
+      <span class="lang-dot" id="hud-lang-dot" style="background-color: var(--color-cyan);"></span>
+      <span id="hud-lang-name">JavaScript</span>
+    </div>
+    <div class="hud-stats-row">
+      <span>Commits: <strong id="hud-commits">34K</strong></span>
+      <span>Stars: <strong id="hud-stars">99K</strong></span>
+    </div>
+    <div class="hud-stats-row" style="border-top: none; padding-top: 0; margin-top: 2px;">
+      <span>Issues: <strong id="hud-issues" style="color: var(--color-text-main);">380</strong></span>
+      <span>Forks: <strong id="hud-forks">19K</strong></span>
+    </div>
+  </div>
+
+  <!-- Bottom-Left Map / Architectural Legend -->
+  <div id="legend-panel" class="ui-overlay glass-panel interactive" style="width: 250px;">
+    <!-- Clickable Header Dropdown Toggle -->
+    <div class="legend-title interactive" id="btn-toggle-legend" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 0; padding: 2px 0;">
+      <span style="font-family: var(--font-display); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--color-cyan);">Visual Encodings</span>
+      <span id="legend-chevron" style="font-size: 10px; transition: transform 0.3s; transform: rotate(180deg); color: var(--color-cyan);">▲</span>
+    </div>
+    
+    <!-- Collapsible content segment (starts closed) -->
+    <div id="legend-content" style="max-height: 0px; overflow: hidden; transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), margin-top 0.35s; margin-top: 0px;">
+      <div class="legend-item" style="margin-top: 12px;">
+        <div class="legend-icon">🏢</div>
+        <div><strong>Height:</strong> <span>Log-scaled Commits</span></div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-icon">↔️</div>
+        <div><strong>Width:</strong> <span>Repository Size (KB)</span></div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-icon">🎨</div>
+        <div><strong>Roof Glow:</strong> <span>Language Palette</span></div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-icon">⬡</div>
+        <div><strong>Orbit Gems:</strong> <span>1 gem / 30K Stars</span></div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-icon" style="color: var(--color-red); animation: pulse 1.2s infinite;">🚨</div>
+        <div><strong>Flashing Red:</strong> <span>Critical Issues (&gt;2K)</span></div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-icon">🗼</div>
+        <div><strong>Antenna Warning:</strong> <span>Mega Project (&gt;16 height)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Left Side Explorer Matrix Toggle -->
+  <button id="btn-toggle-matrix" class="ui-overlay glass-panel interactive" style="bottom: 310px; left: 24px; padding: 10px 16px; font-family: var(--font-display); font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; border-color: rgba(255, 255, 255, 0.1);">
+    <span>🌌</span> Code Matrix
+  </button>
+
+  <!-- Bottom-Center Timeline Playback Control -->
+  <div id="timeline-console" class="ui-overlay glass-panel interactive" style="bottom: 24px; left: 50%; transform: translateX(-50%); width: auto; max-width: 480px; padding: 8px 16px; display: flex; align-items: center; gap: 12px; border-color: var(--border-purple); box-shadow: var(--shadow-purple);">
+    <button id="btn-play-timeline" class="timeline-play-btn" title="Autoplay Time-lapse" style="background: transparent; border: 1px solid var(--color-purple); color: var(--color-cyan); width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 10px; transition: all 0.2s; box-shadow: 0 0 5px rgba(108, 99, 255, 0.2);">▶</button>
+    <span style="font-size: 10px; font-family: var(--font-display); font-weight: 700; letter-spacing: 0.5px; color: var(--color-cyan); white-space: nowrap; text-transform: uppercase;">Metropolis Growth:</span>
+    <input type="range" id="timeline-slider" min="1" max="100" value="100" class="cyber-slider" style="width: 120px; cursor: pointer;">
+    <span id="timeline-status-label" style="font-size: 10px; font-family: var(--font-body); color: var(--color-text-muted); font-weight: 600; white-space: nowrap; min-width: 50px; text-align: right;">100% (All)</span>
+  </div>
+
+  <!-- Bottom-Right View Reset Controller -->
+  <button id="btn-reset-view" class="ui-overlay glass-panel interactive">
+    <span>🏠</span> Reset View
+  </button>
+
+  <!-- RAG AI Analyst Right Panel -->
+  <div id="rag-panel" class="ui-overlay glass-panel">
+    
+    <!-- Sidebar Header -->
+    <div class="panel-header">
+      <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;" id="btn-ping-audit" class="interactive" title="Click to Ping & Locate Building">
+        <h2>Repository Audit</h2>
+        <span style="font-size: 14px; display: inline-block;" id="ping-icon">🎯</span>
+      </div>
+      <button class="close-panel-btn interactive" id="btn-close-panel">✕</button>
+    </div>
+
+    <!-- Repository Core Stats details scrollbox -->
+    <div class="panel-stats-scroll">
+      <div class="repo-main-info">
+        <div class="repo-name-large" id="panel-repo-name">mrdoob / three.js</div>
+        <div class="repo-desc" id="panel-repo-desc">WebGL simplified 3D JavaScript library.</div>
+      </div>
+
+      <!-- Health Score Dynamic grading -->
+      <div class="health-wrapper">
+        <div class="health-header">
+          <span style="color: var(--color-text-muted);">CODEBASE HEALTH INDEX</span>
+          <span id="panel-health-score-val" style="color: var(--color-green);">94 / 100</span>
+        </div>
+        <div class="health-bar-container">
+          <div class="health-bar-fill health-fill-green" id="panel-health-bar-fill" style="width: 94%;"></div>
+        </div>
+      </div>
+
+      <!-- Grid statistics detail cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-icon">💻</div>
+          <div class="stat-val-wrapper">
+            <span class="stat-card-label">Language</span>
+            <span class="stat-card-value" id="panel-lang">JavaScript</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">🏢</div>
+          <div class="stat-val-wrapper">
+            <span class="stat-card-label">Commits</span>
+            <span class="stat-card-value" id="panel-commits">34.5K</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">🌟</div>
+          <div class="stat-val-wrapper">
+            <span class="stat-card-label">Stars</span>
+            <span class="stat-card-value" id="panel-stars">99.5K</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">🚨</div>
+          <div class="stat-val-wrapper">
+            <span class="stat-card-label">Issues</span>
+            <span class="stat-card-value" id="panel-issues">380</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">📦</div>
+          <div class="stat-val-wrapper">
+            <span class="stat-card-label">File Size</span>
+            <span class="stat-card-value" id="panel-size">320 MB</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">👥</div>
+          <div class="stat-val-wrapper">
+            <span class="stat-card-label">Maintainers</span>
+            <span class="stat-card-value" id="panel-contributors">1,850</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Topics / Badges -->
+      <div class="topics-row" id="panel-topics">
+        <span class="topic-badge">webgl</span>
+        <span class="topic-badge">3d</span>
+        <span class="topic-badge">graphics</span>
+      </div>
+    </div>
+
+    <!-- Claude AI Chat Interface -->
+    <div class="chat-section">
+      <div class="chat-banner">
+        <span></span> Claude AI Analyst (Context-Injected)
+      </div>
+
+      <!-- Scrollable Message Log -->
+      <div class="messages-log" id="chat-messages-log">
+        <div class="chat-msg assistant">
+          <h3>RAG System Ingest Active</h3>
+          Welcome! I have established a connection to the 3D visual cityscape matrix. 
+          <br><br>
+          Click any skyscraper in the grid to instantly inject its full repository statistics into my prompt buffer, enabling a deep, context-aware architectural audit!
+        </div>
+      </div>
+
+      <!-- Quick prompts Chips -->
+      <div class="chips-container interactive">
+        <button class="prompt-chip" data-prompt="Explain my Health Score?">📈 Analyze Health</button>
+        <button class="prompt-chip" data-prompt="Why are some windows flashing red?">🚨 Flashing Windows?</button>
+        <button class="prompt-chip" data-prompt="Suggest architectural recommendations!">⚡ Architect Blueprint</button>
+      </div>
+
+      <!-- User Text Typing input footer -->
+      <div class="chat-input-area interactive">
+        <input type="text" id="chat-user-input" placeholder="Ask Claude about this codebase...">
+        <button class="send-msg-btn" id="btn-send-chat" aria-label="Send message">
+          <span>➔</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- JavaScript Entry Point Module -->
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
