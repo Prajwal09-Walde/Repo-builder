@@ -373,6 +373,24 @@ async function triggerUserChatMessage() {
       })
     });
 
+    if (response.status === 401) {
+      localStorage.removeItem('metropolis_token');
+      const authModal = document.getElementById('auth-modal');
+      if (authModal) {
+        authModal.style.display = 'flex';
+        setTimeout(() => {
+          authModal.style.opacity = '1';
+          authModal.style.pointerEvents = 'auto';
+        }, 10);
+      }
+      const authMessageBox = document.getElementById('auth-message-box');
+      if (authMessageBox) {
+        authMessageBox.textContent = 'Session token expired or invalid. Please sign in again.';
+        authMessageBox.style.display = 'block';
+      }
+      throw new Error('Session token expired or invalid. Redirecting to login gate.');
+    }
+
     if (!response.ok) {
       throw new Error(`Server returned error status ${response.status}`);
     }

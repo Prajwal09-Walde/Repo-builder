@@ -85,6 +85,23 @@ export async function fetchGitHubUserRepos(username) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  const triggerLoginRedirect = (message) => {
+    localStorage.removeItem('metropolis_token');
+    const authModal = document.getElementById('auth-modal');
+    if (authModal) {
+      authModal.style.display = 'flex';
+      setTimeout(() => {
+        authModal.style.opacity = '1';
+        authModal.style.pointerEvents = 'auto';
+      }, 10);
+    }
+    const authMessageBox = document.getElementById('auth-message-box');
+    if (authMessageBox) {
+      authMessageBox.textContent = message || 'Session expired. Please sign in again.';
+      authMessageBox.style.display = 'block';
+    }
+  };
+
   try {
     if (source === 'compare') {
       const users = username.split(',').map(s => s.trim()).filter(Boolean);
@@ -102,6 +119,11 @@ export async function fetchGitHubUserRepos(username) {
         fetch(`/api/repos/${users[1]}`, { headers })
       ]);
 
+      if (resA.status === 401 || resB.status === 401) {
+        triggerLoginRedirect('Session expired or invalid. Please sign in again.');
+        throw new Error('Session token expired or invalid.');
+      }
+
       const dataA = resA.ok ? await resA.json() : [];
       const dataB = resB.ok ? await resB.json() : [];
 
@@ -116,6 +138,12 @@ export async function fetchGitHubUserRepos(username) {
       appState.activeRepos = [...dataA, ...dataB];
     } else {
       const response = await fetch(`/api/repos/${username}`, { headers });
+      
+      if (response.status === 401) {
+        triggerLoginRedirect('Session expired or invalid. Please sign in again.');
+        throw new Error('Session token expired or invalid.');
+      }
+
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         const errMsg = errData.error || `Status: ${response.status}`;

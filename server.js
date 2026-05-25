@@ -159,7 +159,7 @@ app.get('/api/repos/:username', authMiddleware, async (req, res) => {
   };
 
   if (oauthToken) {
-    headers['Authorization'] = `token ${oauthToken}`;
+    headers['Authorization'] = `Bearer ${oauthToken}`;
     console.log(`[Proxy Request] Authenticating using User OAuth token`);
   } else {
     console.warn(`[Proxy Warning] No active User OAuth token is set in this session. Unauthenticated API calls are subject to strict rate limits (60/hr).`);
